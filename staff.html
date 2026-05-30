@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Staff Dashboard</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Segoe UI,sans-serif;
+    }
+
+    body{
+      background:#f1f5f9;
+    }
+
+    .topbar{
+      background:#0f172a;
+      color:white;
+      padding:15px 25px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .container{
+      display:grid;
+      grid-template-columns:35% 65%;
+      gap:20px;
+      padding:20px;
+    }
+
+    .card{
+      background:white;
+      border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,.1);
+      padding:15px;
+    }
+
+    .title{
+      font-size:18px;
+      font-weight:bold;
+      margin-bottom:15px;
+      color:#0f172a;
+    }
+
+    .report-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .report-box{
+      padding:15px;
+      border-radius:10px;
+      color:white;
+      text-align:center;
+    }
+
+    .service{background:#2563eb;}
+    .bank{background:#16a34a;}
+    .total{background:#7c3aed;}
+    .edistrict{background:#ea580c;}
+
+    .report-box h3{
+      margin-top:5px;
+      font-size:22px;
+    }
+
+    label{
+      display:block;
+      margin-top:12px;
+      margin-bottom:5px;
+      font-weight:600;
+    }
+
+    input,select{
+      width:100%;
+      padding:10px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+    }
+
+    .checkbox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .btn{
+      width:100%;
+      margin-top:15px;
+      background:#2563eb;
+      color:white;
+      border:none;
+      padding:12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:bold;
+    }
+
+    .btn:hover{
+      background:#1d4ed8;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+
+    th{
+      background:#0f172a;
+      color:white;
+      padding:10px;
+    }
+
+    td{
+      padding:10px;
+      border-bottom:1px solid #e2e8f0;
+      text-align:center;
+    }
+
+    .pending{
+      background:#7f1d1d;
+      color:white;
+      font-weight:bold;
+      border-radius:5px;
+      padding:4px 8px;
+    }
+
+    .paid{
+      background:#166534;
+      color:white;
+      font-weight:bold;
+      border-radius:5px;
+      padding:4px 8px;
+    }
+
+    .table-container{
+      max-height:80vh;
+      overflow:auto;
+    }
+
+    @media(max-width:900px){
+
+      .container{
+        grid-template-columns:1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+  <h2>Staff Dashboard</h2>
+  <h3 id="staffName"></h3>
+</div>
+
+<div class="container">
+
+  <!-- LEFT -->
+
+  <div>
+
+    <div class="card">
+
+      <div class="title">
+        Daily Collection Report
+      </div>
+
+      <div class="report-grid">
+
+        <div class="report-box service">
+          <div>Service Charge</div>
+          <h3 id="serviceTotal">0</h3>
+        </div>
+
+        <div class="report-box bank">
+          <div>Bank Charge</div>
+          <h3 id="bankTotal">0</h3>
+        </div>
+
+        <div class="report-box total">
+          <div>Grand Total</div>
+          <h3 id="grandTotal">0</h3>
+        </div>
+
+        <div class="report-box edistrict">
+          <div>E-District</div>
+          <h3 id="edistrictCount">0</h3>
+        </div>
+
+      </div>
+
+    </div>
+
+    <br>
+
+    <div class="card">
+
+      <div class="title">
+        Customer Entry
+      </div>
+
+      <label>Name</label>
+      <input type="text" id="customerName">
+
+      <div class="checkbox">
+        <input type="checkbox" id="edistrict" onchange="toggleEdistrict()">
+        <span>E-District</span>
+      </div>
+
+      <label>Service Type</label>
+      <input type="text" id="serviceType">
+
+      <label>Service Charge</label>
+      <input type="number" id="serviceCharge" onkeyup="calculateTotal()">
+
+      <label>Bank Charge</label>
+      <input type="number" id="bankCharge" onkeyup="calculateTotal()">
+
+      <label>Total Amount</label>
+      <input type="number" id="totalAmount" readonly>
+
+      <label>Payment Mode</label>
+      <select id="paymentMode">
+        <option>Cash</option>
+        <option>GPay</option>
+        <option>Others</option>
+      </select>
+
+      <button class="btn" onclick="saveCustomer()">
+        ENTER CUSTOMER
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+
+  <div class="card">
+
+    <div class="title">
+      Today's Customer List
+    </div>
+
+    <div class="table-container">
+
+      <table>
+
+        <thead>
+
+        <tr>
+          <th>Sl No</th>
+          <th>Name</th>
+          <th>Service Type</th>
+          <th>Service</th>
+          <th>Bank</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Status</th>
+        </tr>
+
+        </thead>
+
+        <tbody id="tableBody">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+let staffName = "";
+
+window.onload = function(){
+
+  staffName = sessionStorage.getItem("staffName");
+
+  document.getElementById("staffName").innerText = staffName;
+
+  loadLastCustomer();
+
+  loadDashboard();
+
+  setInterval(loadDashboard,2000);
+
+}
+
+function toggleEdistrict(){
+
+  const checked =
+    document.getElementById("edistrict").checked;
+
+  if(checked){
+
+    document.getElementById("serviceType").value =
+      "E-District";
+
+    document.getElementById("serviceType").disabled =
+      true;
+
+    document.getElementById("bankCharge").value = 25;
+
+  }else{
+
+    document.getElementById("serviceType").value = "";
+
+    document.getElementById("serviceType").disabled =
+      false;
+
+    document.getElementById("bankCharge").value = "";
+
+  }
+
+  calculateTotal();
+
+}
+
+function calculateTotal(){
+
+  const service =
+    Number(document.getElementById("serviceCharge").value)||0;
+
+  const bank =
+    Number(document.getElementById("bankCharge").value)||0;
+
+  document.getElementById("totalAmount").value =
+    service + bank;
+
+}
+
+function saveCustomer(){
+
+  const obj = {
+
+    staffName:staffName,
+
+    customerName:
+      document.getElementById("customerName").value,
+
+    serviceType:
+      document.getElementById("serviceType").value,
+
+    serviceCharge:
+      document.getElementById("serviceCharge").value,
+
+    bankCharge:
+      document.getElementById("bankCharge").value,
+
+    paymentMode:
+      document.getElementById("paymentMode").value
+
+  };
+
+  google.script.run
+  .withSuccessHandler(function(){
+
+      document.getElementById("serviceType").value="";
+      document.getElementById("serviceCharge").value="";
+      document.getElementById("bankCharge").value="";
+      document.getElementById("totalAmount").value="";
+      document.getElementById("edistrict").checked=false;
+
+      loadDashboard();
+
+  })
+  .saveCustomer(obj);
+
+}
+
+function loadDashboard(){
+
+  google.script.run
+  .withSuccessHandler(function(data){
+
+      document.getElementById("serviceTotal").innerText =
+        data.totals.totalService;
+
+      document.getElementById("bankTotal").innerText =
+        data.totals.totalBank;
+
+      document.getElementById("grandTotal").innerText =
+        data.totals.grandTotal;
+
+      document.getElementById("edistrictCount").innerText =
+        data.totals.edistrictCount;
+
+      let html="";
+
+      data.rows.forEach(function(row){
+
+        html+=`
+        <tr>
+
+          <td>${row.slNo}</td>
+          <td>${row.customerName}</td>
+          <td>${row.serviceType}</td>
+          <td>${row.serviceCharge}</td>
+          <td>${row.bankCharge}</td>
+          <td>${row.totalAmount}</td>
+          <td>${row.paymentMode}</td>
+
+          <td>
+
+          <span class="${
+            row.status==="Paid" ? "paid":"pending"
+          }">
+
+          ${row.status}
+
+          </span>
+
+          </td>
+
+        </tr>
+        `;
+
+      });
+
+      document.getElementById("tableBody").innerHTML =
+        html;
+
+  })
+  .getStaffTodayData(staffName);
+
+}
+
+function loadLastCustomer(){
+
+  google.script.run
+  .withSuccessHandler(function(name){
+
+      document.getElementById("customerName").value =
+        name;
+
+  })
+  .getLastCustomerName(staffName);
+
+}
+
+</script>
+
+</body>
+</html>
