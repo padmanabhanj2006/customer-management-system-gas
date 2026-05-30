@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard</title>
+<style>
+body{font-family:Segoe UI,sans-serif;background:#f1f5f9;margin:0}
+.header{background:#0f172a;color:#fff;padding:15px}
+.container{padding:20px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:15px 0}
+.card{background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.section{background:#fff;padding:15px;border-radius:10px;margin-top:20px}
+table{width:100%;border-collapse:collapse}
+th{background:#0f172a;color:#fff}
+th,td{padding:8px;border:1px solid #ddd;text-align:center}
+.pending{background:#7f1d1d;color:#fff}
+.paid{background:#166534;color:#fff}
+button{padding:6px 10px}
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5)}
+.modalbox{background:#fff;width:400px;margin:60px auto;padding:20px}
+input,select{width:100%;padding:8px;margin:5px 0}
+</style>
+</head>
+<body>
+<div class="header">
+<h2>Admin Dashboard</h2>
+<input type="date" id="filterDate" onchange="loadData()">
+</div>
+
+<div class="container">
+<div class="cards">
+<div class="card"><h3>Prathibha Totals</h3><div id="pTotals"></div></div>
+<div class="card"><h3>Rejitha Totals</h3><div id="rTotals"></div></div>
+</div>
+
+<div class="section">
+<h3>Prathibha Records</h3>
+<table><thead><tr><th>Sl</th><th>Name</th><th>Service</th><th>SC</th><th>BC</th><th>Total</th><th>Mode</th><th>Status</th><th>Edit</th></tr></thead>
+<tbody id="pBody"></tbody></table>
+</div>
+
+<div class="section">
+<h3>Rejitha Records</h3>
+<table><thead><tr><th>Sl</th><th>Name</th><th>Service</th><th>SC</th><th>BC</th><th>Total</th><th>Mode</th><th>Status</th><th>Edit</th></tr></thead>
+<tbody id="rBody"></tbody></table>
+</div>
+</div>
+
+<div id="modal">
+<div class="modalbox">
+<input type="hidden" id="rowNumber">
+<label>Name</label><input id="customerName">
+<label>Service Type</label><input id="serviceType">
+<label>Service Charge</label><input id="serviceCharge">
+<label>Bank Charge</label><input id="bankCharge">
+<label>Payment Mode</label><select id="paymentMode"><option>Cash</option><option>GPay</option><option>Others</option></select>
+<button onclick="saveEdit()">Save</button>
+<button onclick="closeModal()">Close</button>
+</div>
+</div>
+
+<script>
+window.onload=function(){
+ let d=new Date().toISOString().split('T')[0];
+ document.getElementById('filterDate').value=d;
+ loadData();
+ setInterval(loadData,2000);
+};
+
+function loadData(){
+ google.script.run.withSuccessHandler(render).getAdminData(document.getElementById('filterDate').value);
+}
+
+function render(data){
+ document.getElementById('pTotals').innerHTML=`Service: ${data.summary.prathibha.service}<br>Bank: ${data.summary.prathibha.bank}<br>Total: ${data.summary.prathibha.total}`;
+ document.getElementById('rTotals').innerHTML=`Service: ${data.summary.rejitha.service}<br>Bank: ${data.summary.rejitha.bank}<br>Total: ${data.summary.rejitha.total}`;
+
+ document.getElementById('pBody').innerHTML=data.prathibha.map(rowHtml).join('');
+ document.getElementById('rBody').innerHTML=data.rejitha.map(rowHtml).join('');
+}
+
+function rowHtml(r){
+ return `<tr>
+<td>${r.slNo}</td>
+<td>${r.customerName}</td>
+<td>${r.serviceType}</td>
+<td>${r.serviceCharge}</td>
+<td>${r.bankCharge}</td>
+<td>${r.totalAmount}</td>
+<td>${r.paymentMode}</td>
+<td>
+<select onchange="changeStatus(${r.rowNumber},this.value)" class="${r.status==='Paid'?'paid':'pending'}">
+<option ${r.status==='Pending'?'selected':''}>Pending</option>
+<option ${r.status==='Paid'?'selected':''}>Paid</option>
+</select>
+</td>
+<td><button onclick='editRecord(${JSON.stringify("X")});openEdit(${JSON.stringify({})})'>Edit</button></td>
+</tr>`.replace("openEdit({})",`openEdit(${encodeURIComponent(JSON.stringify(r))})`);
+}
+
+function openEdit(encoded){
+ let r=JSON.parse(decodeURIComponent(encoded));
+ document.getElementById('rowNumber').value=r.rowNumber;
+ document.getElementById('customerName').value=r.customerName;
+ document.getElementById('serviceType').value=r.serviceType;
+ document.getElementById('serviceCharge').value=r.serviceCharge;
+ document.getElementById('bankCharge').value=r.bankCharge;
+ document.getElementById('paymentMode').value=r.paymentMode;
+ document.getElementById('modal').style.display='block';
+}
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+function saveEdit(){
+ let obj={
+ rowNumber:document.getElementById('rowNumber').value,
+ customerName:document.getElementById('customerName').value,
+ serviceType:document.getElementById('serviceType').value,
+ serviceCharge:document.getElementById('serviceCharge').value,
+ bankCharge:document.getElementById('bankCharge').value,
+ paymentMode:document.getElementById('paymentMode').value
+ };
+ google.script.run.withSuccessHandler(function(){closeModal();loadData();}).updateCustomer(obj);
+}
+
+function changeStatus(row,status){
+ google.script.run.updateStatus(row,status);
+}
+</script>
+</body>
+</html>yes
