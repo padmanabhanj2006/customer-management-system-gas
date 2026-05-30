@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Customer Management System</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Segoe UI',sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:linear-gradient(135deg,#0f172a,#1e293b,#334155);
+    }
+
+    .login-card{
+      width:420px;
+      background:#fff;
+      padding:40px;
+      border-radius:20px;
+      box-shadow:0 15px 40px rgba(0,0,0,.25);
+    }
+
+    .logo{
+      text-align:center;
+      margin-bottom:25px;
+    }
+
+    .logo h1{
+      color:#0f172a;
+      font-size:26px;
+      margin-bottom:8px;
+    }
+
+    .logo p{
+      color:#64748b;
+      font-size:14px;
+    }
+
+    .form-group{
+      margin-bottom:18px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:8px;
+      font-weight:600;
+      color:#334155;
+    }
+
+    input{
+      width:100%;
+      padding:12px 15px;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      font-size:15px;
+    }
+
+    input:focus{
+      outline:none;
+      border-color:#2563eb;
+    }
+
+    button{
+      width:100%;
+      border:none;
+      padding:14px;
+      background:#2563eb;
+      color:white;
+      border-radius:10px;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:.3s;
+    }
+
+    button:hover{
+      background:#1d4ed8;
+    }
+
+    .loading{
+      display:none;
+      text-align:center;
+      margin-top:15px;
+      color:#2563eb;
+      font-weight:600;
+    }
+
+    .error{
+      display:none;
+      margin-top:15px;
+      background:#fee2e2;
+      color:#b91c1c;
+      padding:10px;
+      border-radius:8px;
+      text-align:center;
+    }
+
+    .footer{
+      margin-top:20px;
+      text-align:center;
+      color:#94a3b8;
+      font-size:12px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="login-card">
+
+  <div class="logo">
+    <h1>Customer Management System</h1>
+    <p>Admin & Staff Portal</p>
+  </div>
+
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="username">
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password">
+  </div>
+
+  <button onclick="login()">
+    LOGIN
+  </button>
+
+  <div class="loading" id="loading">
+    Checking Credentials...
+  </div>
+
+  <div class="error" id="error">
+    Invalid Username or Password
+  </div>
+
+  <div class="footer">
+    Powered by Google Apps Script
+  </div>
+
+</div>
+
+<script>
+
+function login(){
+
+  document.getElementById("error").style.display="none";
+  document.getElementById("loading").style.display="block";
+
+  const username=document.getElementById("username").value.trim();
+  const password=document.getElementById("password").value.trim();
+
+  google.script.run
+  .withSuccessHandler(function(response){
+
+      document.getElementById("loading").style.display="none";
+
+      if(!response.success){
+
+        document.getElementById("error").style.display="block";
+        return;
+      }
+
+      if(response.role==="ADMIN"){
+
+        sessionStorage.setItem("role","ADMIN");
+
+        document.body.innerHTML=`
+        <div style="
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-size:22px;
+          font-weight:bold;">
+          Loading Admin Dashboard...
+        </div>`;
+
+        google.script.run
+        .withSuccessHandler(function(html){
+          document.open();
+          document.write(html);
+          document.close();
+        })
+        .getAdminPage();
+
+      }
+
+      if(response.role==="STAFF"){
+
+        sessionStorage.setItem("role","STAFF");
+        sessionStorage.setItem("staffName",response.staffName);
+
+        document.body.innerHTML=`
+        <div style="
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-size:22px;
+          font-weight:bold;">
+          Loading Staff Dashboard...
+        </div>`;
+
+        google.script.run
+        .withSuccessHandler(function(html){
+          document.open();
+          document.write(html);
+          document.close();
+        })
+        .getStaffPage();
+
+      }
+
+  })
+  .loginUser(username,password);
+
+}
+
+document.addEventListener("keypress",function(e){
+
+  if(e.key==="Enter"){
+    login();
+  }
+
+});
+
+</script>
+
+</body>
+</html>
